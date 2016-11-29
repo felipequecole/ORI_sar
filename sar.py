@@ -9,9 +9,6 @@ def create (directory):
         #print ("mais externo "+ dirname)
         for s in directory:
             print ("s atual: "+s + " dirname atual: " + dirname)
-            if (s == dirname):
-                pass
-                #print (s)
         directory[dirname] = []
         for subdirname in dirnames:
             directory[dirname].append(subdirname)
@@ -20,7 +17,7 @@ def create (directory):
         for filename in filenames:
             #print("filename "+ filename)
             directory[dirname].append(filename)
-    #print (directory)
+    print (directory)
 
 
 if __name__ == '__main__':
