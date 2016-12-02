@@ -6,8 +6,6 @@ def create (directory): #funcao que cria o arquivo .sar
     directory = {}
     for dirname, dirnames, filenames in os.walk('.', topdown = True): # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
         #print ("mais externo "+ dirname)
-        for s in directory:
-            print ("s atual: "+s + " dirname atual: " + dirname)
         directory[dirname] = []
         for subdirname in dirnames:
             directory[dirname].append(subdirname)
