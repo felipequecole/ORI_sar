@@ -1,5 +1,5 @@
 import os
-
+import pickle
 
 class Tree(object):
     def __init__(self, name='root', archives=None, children=None):
@@ -68,7 +68,7 @@ class Tree(object):
 
 
 def create(path):  # funcao que cria o arquivo .sar
-    output = open(path+'.sar', 'w')
+    output = open(path+'.sar', 'wb')
     directory = Tree(path)
     is_root = True
     # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
@@ -118,10 +118,14 @@ def create(path):  # funcao que cria o arquivo .sar
             # # directory[dirname].append(filename)
         is_root = False
     directory.dump()
+    pickle.dump(directory,output)
+
 
 
 def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
-    pass
+    dir_input = open(archive, 'rb')
+    tree = pickle.load(dir_input)
+    tree.dump()
 
 
 def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
@@ -130,3 +134,4 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
 
 if __name__ == '__main__':  # define a funcao main
     create('.')
+    list_dir('..sar')
