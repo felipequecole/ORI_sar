@@ -24,6 +24,7 @@ class Tree(object):
         print self.archives
         if self.children is not None: 
             for child in self.children: 
+                print ('\npai: '+self.name)
                 child.dump()
 
 def create (path): #funcao que cria o arquivo .sar
