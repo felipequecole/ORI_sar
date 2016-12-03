@@ -12,13 +12,17 @@ class Tree(object):
         if children is not None:
             for child in children:
                 self.add_child(child)
+
     def __repr__(self):
         return self.name
+
     def add_child(self, node):
         assert isinstance(node, Tree)
         self.children.append(node)
+
     def add_archive(self, archive):
         self.archives.append(archive)
+
     def dump(self):
         print self.name
         print self.archives
@@ -27,56 +31,102 @@ class Tree(object):
                 print ('\npai: '+self.name)
                 child.dump()
 
-def create (path): #funcao que cria o arquivo .sar
-    dir = open(path+'.sar', 'w')
+    def insert_archive(self, nomepasta, archive):
+        here = False
+        for pasta in self.children:
+            if nomepasta == pasta.name:
+                pasta.archives.append(archive)
+                here = True
+                break
+        if here:
+            return True
+        else:
+            for pasta in self.children:
+                found = pasta.insert_archive(nomepasta, archive)
+                if found:
+                    break
+            return True
 
+    def insert_directory(self, father, child):
+        here = False
+        for pasta in self.children:
+            if father == pasta.name:
+                aux = Tree(os.path.join(father, child))
+                pasta.children.append(aux)
+                here = True
+                break
+        if here:
+            return True
+        else:
+            for pasta in self.children:
+                found = pasta.insert_directory(father, child)
+                if found:
+                    break
+            return True
+
+
+
+
+def create(path):  # funcao que cria o arquivo .sar
+    output = open(path+'.sar', 'w')
     directory = Tree(path)
-    isRoot = True
-    for dirname, dirnames, filenames in os.walk('.', topdown = True): # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
+    is_root = True
+    # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
+    for dirname, dirnames, filenames in os.walk(path, topdown=True):
         if '.git' in dirnames:
             # isso aqui eh soh pra ele nao entrar na pasta .git e imprimir um monte de coisa chata
             dirnames.remove('.git')
         
         for subdirname in dirnames:
-            subdir = Tree(subdirname)
-            if isRoot:
+            if is_root:
+                subdir = Tree(os.path.join(dirname, subdirname))
                 directory.add_child(subdir)
-            else: 
-                cont = 0
-                index = 0
-                for pasta in directory.children: #navego por todos os filhos
-                    if (dirname != pasta.name): #se nao for o que eu to procurando, continuo procurando
-                        cont = cont + 1
-                    else:
-                        index = cont # se for, guardo o indice
-                directory.children[index].add_child(subdir) #insiro no indice certo
+            else:
+                directory.insert_directory(dirname, subdirname)
+                # cont = 0
+                # index = 0
+                # here = False
+                # for pasta in directory.children:  # navego por todos os filhos
+                #     if dirname != pasta.name:  # se nao for o que eu to procurando, continuo procurando
+                #         cont += 1
+                #     else:
+                #         here = True
+                #         index = cont  # se for, guardo o indice
+                # if not here:
+                #     for pasta in directory.children:
+                #         for subpasta in pasta.children:
+                #
+                # directory.children[index].add_child(subdir)  # insiro no indice certo
 
-            #print("subdirname "+ subdirname)
+            # print("subdirname "+ subdirname)
 
         for filename in filenames:
-            if isRoot: #quer dizer que ta na pasta raiz
+            if is_root:  # quer dizer que ta na pasta raiz
                 directory.add_archive(filename)
             
-            else: #senao ta em subpasta
-                cont = 0 
-                index = 0
-                for pasta in directory.children: #navego por todos os filhos
-                    if (dirname != pasta.name): #se nao for o que eu to procurando, continuo procurando
-                        cont = cont + 1
-                    else:
-                        index = cont # se for, guardo o indice
-                directory.children[index].add_archive(filename) #insiro no indice certo
-            #print("filename "+ filename)
-            #directory[dirname].append(filename)
-        isRoot = False      
+            else:  # senao ta em subpasta
+                directory.insert_archive(dirname,filename)
+            #     cont = 0
+            #     index = 0
+            #     for pasta in directory.children:  # navego por todos os filhos
+            #         if dirname != pasta.name:  # se nao for o que eu to procurando, continuo procurando
+            #             cont += 1
+            #         else:
+            #             index = cont  # se for, guardo o indice
+            #     directory.children[index].add_archive(filename)  # insiro no indice certo
+            # # print("filename "+ filename)
+            # # directory[dirname].append(filename)
+        is_root = False
     directory.dump()
 
-def list (archive): #funcao que lista os diretorios do arquivo .sar
-	pass
 
-def extract (archive): #funcao que extrai os arquivos do arquivo .sar
-	pass
+def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
+    pass
 
 
-if __name__ == '__main__': #define a funcao main
-    create('abc')
+def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
+    pass
+
+
+if __name__ == '__main__':  # define a funcao main
+    create('.')
