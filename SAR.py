@@ -131,10 +131,20 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
 
 
 def main (argv): 
-	pass
-	#create('.')
-    #list_dir('..sar')
-    #extract('..sar')
+	if len(argv) < 2: 
+		return 3
+	elif argv[1].upper() == 'C':
+		create('./'+argv[2])
+	elif argv[1].upper() == 'L':
+		if argv[2][-3:] == 'sar':
+			list_dir(argv[2])
+		else:
+			return 2
+	elif argv[1].upper() == 'E':
+		if argv[2][-3:] == 'sar':
+			extract(argv[2])
+		else:
+			return 2
 
 if __name__ == '__main__':  # define a funcao main
-	create('./pasta')
+	main(sys.argv)
