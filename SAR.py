@@ -39,7 +39,6 @@ class Tree(object):
 			if nomepasta == pasta.name:
 				pasta.archives.append(os.path.join(nomepasta,archive))
 				filecontent = open(os.path.join(nomepasta,archive), 'rb')
-				print (filecontent.read())
 				pasta.content_files.append(filecontent.read())
 				here = True
 				break
@@ -112,21 +111,27 @@ def create(path):  # funcao que cria o arquivo .sar
                 directory.insert_archive(dirname,filename)
            
         is_root = False
-    directory.dump()
     pickle.dump(directory,output)
+    print ("Created "+path+'.sar')
+    return 0
 
 
 
 def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
-    sar_input = open(archive, 'rb')
-    tree = pickle.load(sar_input)
-    tree.dump()
+	print ('Listando diretorio salvo em: '+archive)
+	sar_input = open(archive, 'rb')
+	tree = pickle.load(sar_input)
+	tree.dump()
+	return 0
 
 
 def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
     sar_input = open(archive, 'rb')
+    print ('Extraindo diretorio salvo em: '+archive)
     tree = pickle.load(sar_input)
     tree.extract_tree()
+    print ('Extracao completa.')
+    return 0
 
 
 
@@ -134,15 +139,18 @@ def main (argv):
 	if len(argv) < 2: 
 		return 3
 	elif argv[1].upper() == 'C':
-		create('./'+argv[2])
+		if os.path.isdir(argv[2]):
+			return create(argv[2])
+		else:
+			return 1
 	elif argv[1].upper() == 'L':
 		if argv[2][-3:] == 'sar':
-			list_dir(argv[2])
+			return list_dir(argv[2])
 		else:
 			return 2
 	elif argv[1].upper() == 'E':
 		if argv[2][-3:] == 'sar':
-			extract(argv[2])
+			return extract(argv[2])
 		else:
 			return 2
 
