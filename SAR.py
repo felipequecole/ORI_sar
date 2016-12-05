@@ -26,8 +26,8 @@ class Tree(object):
 		self.archives.append(archive)
 
 	def dump(self):
-		print self.name
-		print self.archives
+		print (self.name)
+		print (self.archives)
 		if self.children is not None: 
 			for child in self.children: 
 				print ('\npai: '+self.name)
@@ -72,7 +72,7 @@ class Tree(object):
 		if not os.path.isdir(self.name):
 			os.mkdir(self.name)
 		for filename in self.archives:
-			print filename
+			print (filename)
 			output_file = open(filename, 'wb')
 			index = self.archives.index(filename)
 			output_file.write(self.content_files[index])
@@ -80,6 +80,9 @@ class Tree(object):
 		if self.children is not None:
 			for child in self.children:
 				child.extract_tree()
+
+	def list_tree(self):
+
 
 
 
@@ -138,17 +141,17 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
 def main (argv): 
 	if len(argv) < 2: 
 		return 3
-	elif argv[1].upper() == 'C':
+	elif argv[1].upper() == '-C':
 		if os.path.isdir(argv[2]):
 			return create(argv[2])
 		else:
 			return 1
-	elif argv[1].upper() == 'L':
+	elif argv[1].upper() == '-L':
 		if argv[2][-3:] == 'sar':
 			return list_dir(argv[2])
 		else:
 			return 2
-	elif argv[1].upper() == 'E':
+	elif argv[1].upper() == '-E':
 		if argv[2][-3:] == 'sar':
 			return extract(argv[2])
 		else:
