@@ -81,8 +81,9 @@ class Tree(object):
 			for child in self.children:
 				child.extract_tree()
 
-	def list_tree(self):
-		pass
+	def save_to_file(self):
+		output_file = open()
+
 
 
 
@@ -110,12 +111,14 @@ def create(path):  # funcao que cria o arquivo .sar
                 directory.add_archive(os.path.join(dirname,filename))
                 filecontent = open(os.path.join(dirname,filename), 'rb')
                 directory.content_files.append(filecontent.read())
+                filecontent.close()
             
             else:  # senao ta em subpasta
                 directory.insert_archive(dirname,filename)
            
         is_root = False
-    pickle.dump(directory,output)
+    #pickle.dump(directory,output)
+    directory.save_to_file()
     print ("Created "+path+'.sar')
     return 0
 
@@ -124,8 +127,8 @@ def create(path):  # funcao que cria o arquivo .sar
 def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
 	print ('Listando diretorio salvo em: '+archive)
 	sar_input = open(archive, 'rb')
-	tree = pickle.load(sar_input)
-	tree.dump()
+	
+	sar_input.close()
 	return 0
 
 
