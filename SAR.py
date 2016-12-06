@@ -137,11 +137,23 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
     print ('Extracao completa.')
     return 0
 
+def sar_help():
+	print("\t\t\t\tSAR - stream archive")
+	print("\t\t\t\t\tComandos: ")
+	print("\t -c caminho_diretorio : cria um arquivo .sar contendo toda a hierarquia e arquivos do diretorio passado")
+	print("\t -l nome_arquivo.sar : exibe hierarquia de pastas e arquivos salva no arquivo.sar")
+	print("\t -e nome_arquivo.sar : extrai o conteudo do arquivo.sar")
 
 
 def main (argv): 
-	if len(argv) < 2: 
+	if len(argv) <= 2: 
+		if len(argv) == 2 and argv[1].upper() == '-H':
+			sar_help()
+			return 3
+		print("Entrada invalida \n\nDigite -h para ajuda")
+		sar_help()
 		return 3
+
 	elif argv[1].upper() == '-C':
 		if os.path.isdir(argv[2]):
 			return create(argv[2])
@@ -157,6 +169,7 @@ def main (argv):
 			return extract(argv[2])
 		else:
 			return 2
+
 
 if __name__ == '__main__':  # define a funcao main
 	main(sys.argv)
