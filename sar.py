@@ -209,9 +209,9 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
 
 def sar_help():		#imprime instrucoes para usuario
 	print("\t\t\t\t\tComandos: ")
-	print("\t -c caminho_diretorio : cria um arquivo .sar contendo toda a hierarquia e arquivos do diretorio passado")
-	print("\t -l nome_arquivo.sar : exibe hierarquia de pastas e arquivos salva no arquivo.sar")
-	print("\t -e nome_arquivo.sar : extrai o conteudo do arquivo.sar")
+	print("\t-c caminho_diretorio : cria um arquivo .sar contendo toda a hierarquia e arquivos do diretorio passado")
+	print("\t-l nome_arquivo.sar : exibe hierarquia de pastas e arquivos salva no arquivo.sar")
+	print("\t-e nome_arquivo.sar : extrai o conteudo do arquivo.sar")
 
 
 def main (argv):
