@@ -1,31 +1,233 @@
 import os
+import pickle
+import sys
 
-def create (directory): #funcao que cria o arquivo .sar
-    dir = open(directory+'.sar', 'w')
+class Tree(object):
+	def __init__(self, name='root', archives=None, children=None):
+		self.name = name
+		self.archives = []
+		self.children = []
+		self.content_files = []
+		if archives is not None: 
+			for archive in archives:
+				self.archives.append(archive)
+		if children is not None:
+			for child in children:
+				self.add_child(child)
 
-    directory = {}
-    for dirname, dirnames, filenames in os.walk('.', topdown = True): # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
-        #print ("mais externo "+ dirname)
-        directory[dirname] = []
+	def __repr__(self):
+		return self.name
+
+	def add_child(self, node):
+		assert isinstance(node, Tree)
+		self.children.append(node)
+
+	def add_archive(self, archive):	
+		self.archives.append(archive)
+
+	def dump(self):
+		print (self.name)
+		print (self.archives)
+		if self.children is not None: 
+			for child in self.children: 
+				print ('\npai: '+self.name)
+				child.dump()
+
+	def insert_archive(self, nomepasta, archive):
+		here = False
+		for pasta in self.children:
+			if nomepasta == pasta.name:
+				pasta.archives.append(os.path.join(nomepasta,archive))
+				filecontent = open(os.path.join(nomepasta,archive), 'rb')
+				pasta.content_files.append(filecontent.read())
+				here = True
+				break
+		if here:
+			return True
+		else:
+			for pasta in self.children:
+				found = pasta.insert_archive(nomepasta, archive)
+				if found:
+					break
+			return True
+
+	def insert_directory(self, father, child):
+		here = False
+		for pasta in self.children:
+			if father == pasta.name:
+				aux = Tree(os.path.join(father, child))
+				pasta.children.append(aux)
+				here = True
+				break
+		if here:
+			return True
+		else:
+			for pasta in self.children:
+				found = pasta.insert_directory(father, child)
+				if found:
+					break
+			return True
+
+	def extract_tree(self):
+		if not os.path.isdir(self.name):
+			os.mkdir(self.name)
+		for filename in self.archives:
+			print (filename)
+			output_file = open(filename, 'wb')
+			index = self.archives.index(filename)
+			output_file.write(self.content_files[index])
+			
+		if self.children is not None:
+			for child in self.children:
+				child.extract_tree()
+
+	def save_to_file(self, output_file):
+		output_file.write('{')	#simbolo que marca inicio de pasta
+		output_file.write(self.name)
+		output_file.write('$')	#simbolo que marca fim de nome de pasta
+		if self.children is not None:
+			for child in self.children:
+				child.save_to_file(output_file)	#chama recursivamente a funcao
+		if len(self.archives) > 0: 
+			for file in self.archives:
+				output_file.write('#')	#simbolo que marca inicio de arquivo
+				output_file.write(file)
+				current_index = self.archives.index(file)
+				output_file.write('|')	#simbolo que marca inicio do offset
+				output_file.write(str(len(str(self.content_files[current_index]))))
+				output_file.write('*')	#simbolo que  marca inicio dos dados do arquivo
+				output_file.write(self.content_files[current_index])
+				
+		output_file.write('}')	#fecha pasta [a ideia eh fechar sempre a ultima aberta]		
+		
+
+
+
+
+
+def create(path):  # funcao que cria o arquivo .sar
+    output = open(path+'.sar', 'wb')
+    directory = Tree(path)
+    is_root = True
+    # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
+    for dirname, dirnames, filenames in os.walk(path, topdown=True):
+        if '.git' in dirnames:
+            # isso aqui eh soh pra ele nao entrar na pasta .git e imprimir um monte de coisa chata
+            dirnames.remove('.git')
+        
         for subdirname in dirnames:
-            directory[dirname].append(subdirname)
-            #print("subdirname "+ subdirname)
+            if is_root:
+                subdir = Tree(os.path.join(dirname, subdirname))
+                directory.add_child(subdir)
+            else:
+                directory.insert_directory(dirname, subdirname)
+               
 
         for filename in filenames:
-            #print("filename "+ filename)
-            directory[dirname].append(filename)
+            if is_root:  # quer dizer que ta na pasta raiz
+                directory.add_archive(os.path.join(dirname,filename))
+                filecontent = open(os.path.join(dirname,filename), 'rb')
+                directory.content_files.append(filecontent.read())
+                filecontent.close()
+            
+            else:  # senao ta em subpasta
+                directory.insert_archive(dirname,filename)
+           
+        is_root = False
+    #pickle.dump(directory,output)
+    iterator = 0
+    directory.save_to_file(output)
+    print ("Created "+path+'.sar')
+    return 0
 
-        if '.git' in dirnames:
-        	# isso aqui eh soh pra ele nao entrar na pasta .git e imprimir um monte de coisa chata
-        	dirnames.remove('.git')
-    print (directory)
-
-def list (archive): #funcao que lista os diretorios do arquivo .sar
-	pass
-
-def extract (archive): #funcao que extrai os arquivos do arquivo .sar
-	pass
 
 
-if __name__ == '__main__': #define a funcao main
-    create('abc')
+def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
+	print ('Listando diretorio salvo em: '+archive)
+	sar_input = open(archive, 'rb')
+	
+	sar_input.close()
+	return 0
+
+
+def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
+    sar_input = open(archive, 'rb')
+    print ('Extraindo diretorio salvo em: '+archive)
+    file_sar = sar_input.read()
+    current_offset = 0
+    begin = 0
+    end = 0
+    j_begin = 0
+    j_end = 0
+    open_dir = False
+    while current_offset < len(file_sar):
+    	if file_sar[current_offset] == '{':					#inicio de pasta
+    		print('abriu')
+    		begin = current_offset
+
+    	elif (file_sar[current_offset]== '$'):				#fim do do nome da pasta
+    		end = current_offset
+    		print (file_sar[begin+1:end])
+    		if not os.path.isdir(file_sar[begin+1:end]):
+    			os.mkdir(file_sar[begin+1:end])
+
+    	elif (file_sar[current_offset] == '#'):				#inicio do arquivo
+    		begin = current_offset
+
+    	elif (file_sar[current_offset] == '|'):				#inicio do offset do arquivo
+    		end = current_offset
+    		print (file_sar[begin+1:end])
+    		arq_dest = open(file_sar[begin+1:end], 'wb')
+    		j_begin = current_offset
+
+    	elif (file_sar[current_offset] == '*'):				#inicio dos dados do arquivo
+    		j_end = current_offset
+    		jump = int(file_sar[j_begin+1:j_end])
+    		arq_dest.write(file_sar[current_offset+1:current_offset+jump])
+    		arq_dest.close()
+    		current_offset += jump
+
+    	current_offset += 1 #incremento contador
+
+
+
+    print ('Extracao completa.')
+    sar_input.close()
+    return 0
+
+def sar_help():
+	print("\t\t\t\tSAR - stream archive")
+	print("\t\t\t\t\tComandos: ")
+	print("\t -c caminho_diretorio : cria um arquivo .sar contendo toda a hierarquia e arquivos do diretorio passado")
+	print("\t -l nome_arquivo.sar : exibe hierarquia de pastas e arquivos salva no arquivo.sar")
+	print("\t -e nome_arquivo.sar : extrai o conteudo do arquivo.sar")
+
+
+def main (argv):
+	if len(argv) <= 2: 
+		if len(argv) == 2 and argv[1].upper() == '-H':
+			sar_help()
+			return 3
+		print("Entrada invalida \n\nDigite -h para ajuda")
+		sar_help()
+		return 3
+
+	elif argv[1].upper() == '-C':
+		if os.path.isdir(argv[2]):
+			return create(argv[2])
+		else:
+			return 1
+	elif argv[1].upper() == '-L':
+		if argv[2][-3:] == 'sar':
+			return list_dir(argv[2])
+		else:
+			return 2
+	elif argv[1].upper() == '-E':
+		if argv[2][-3:] == 'sar':
+			return extract(argv[2])
+		else:
+			return 2
+
+
+if __name__ == '__main__':  # define a funcao main
+	main(sys.argv)
