@@ -85,9 +85,6 @@ class Tree(object):
 		output_file.write('{')	#simbolo que marca inicio de pasta
 		output_file.write(self.name)
 		output_file.write('$')	#simbolo que marca fim de nome de pasta
-		if self.children is not None:
-			for child in self.children:
-				child.save_to_file(output_file)	#chama recursivamente a funcao
 		if len(self.archives) > 0: 
 			for file in self.archives:
 				output_file.write('#')	#simbolo que marca inicio de arquivo
@@ -97,6 +94,10 @@ class Tree(object):
 				output_file.write(str(len(str(self.content_files[current_index]))))
 				output_file.write('*')	#simbolo que  marca inicio dos dados do arquivo
 				output_file.write(self.content_files[current_index])
+		if self.children is not None:
+			for child in self.children:
+				child.save_to_file(output_file)	#chama recursivamente a funcao
+		
 				
 		output_file.write('}')	#fecha pasta [a ideia eh fechar sempre a ultima aberta]		
 		
@@ -145,6 +146,7 @@ def create(path):  # funcao que cria o arquivo .sar
 def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
 	print ('Listando diretorio salvo em: '+archive)
 	sar_input = open(archive, 'rb')
+
 	
 	sar_input.close()
 	return 0
