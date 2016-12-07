@@ -197,7 +197,7 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
     	elif (file_sar[current_offset] == '*'):				# inicio dos dados do arquivo
     		j_end = current_offset
     		jump = int(file_sar[j_begin+1:j_end])			# leio e calculo o offset
-    		arq_dest.write(file_sar[current_offset+1:current_offset+jump])	# coloco o conteudo no arquivo
+    		arq_dest.write(file_sar[current_offset+1:(current_offset+jump+1)])	# coloco o conteudo no arquivo
     		arq_dest.close()
     		current_offset += jump		# pulo para a proxima posicao valida
 

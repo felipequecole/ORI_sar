@@ -1,2 +1,2 @@
 @ECHO OFF
-python SAR.py %1 %2
+python sar.py %1 %2
