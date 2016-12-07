@@ -81,8 +81,24 @@ class Tree(object):
 			for child in self.children:
 				child.extract_tree()
 
-	def save_to_file(self):
-		output_file = open()
+	def save_to_file(self, output_file):
+		output_file.write('{')	#simbolo que marca inicio de pasta
+		output_file.write(self.name)
+		if self.children is not None:
+			for child in self.children:
+				child.save_to_file(output_file)	#chama recursivamente a funcao
+		if len(self.archives) > 0: 
+			for file in self.archives:
+				output_file.write('#')	#simbolo que marca inicio de arquivo
+				output_file.write(file)
+				current_index = self.archives.index(file)
+				output_file.write('|')	#simbolo que marca inicio do offset
+				output_file.write(str(sys.getsizeof(self.content_files[current_index])))
+				output_file.write('*')	#simbolo que  marca inicio dos dados do arquivo
+				output_file.write(self.content_files[current_index])
+				
+		output_file.write('}')	#fecha pasta [a ideia eh fechar sempre a ultima aberta]		
+		
 
 
 
@@ -118,7 +134,8 @@ def create(path):  # funcao que cria o arquivo .sar
            
         is_root = False
     #pickle.dump(directory,output)
-    directory.save_to_file()
+    iterator = 0
+    directory.save_to_file(output)
     print ("Created "+path+'.sar')
     return 0
 
@@ -135,9 +152,9 @@ def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
 def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
     sar_input = open(archive, 'rb')
     print ('Extraindo diretorio salvo em: '+archive)
-    tree = pickle.load(sar_input)
-    tree.extract_tree()
+   
     print ('Extracao completa.')
+    sar_input.close()
     return 0
 
 def sar_help():
