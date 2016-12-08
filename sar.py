@@ -3,36 +3,38 @@ import sys
 
 
 class Tree(object):
-	def __init__(self, name='root', archives=None, children=None):
+	def __init__(self, name='root', files=None, subfolders=None):
 		self.name = name 						# nome da pasta 
-		self.archives = []						# lista de nomes de arquivo
-		self.children = []						# lista de subpastas
+		self.files = []						# lista de nomes de arquivo
+		self.subfolders = []						# lista de subpastas
 		self.content_files = []					# lista com conteudo dos arquivos
-		if archives is not None: 
-			for archive in archives:
-				self.archives.append(archive)
-		if children is not None:
-			for child in children:
-				self.add_child(child)
+		if files is not None: 
+			for file in files:
+				self.files.append(archive)
+		if subfolders is not None:
+			for subfolder in subfolders:
+				self.add_subfolder(subfolder)
 
 
-	def add_child(self, node):
+	def add_subfolder(self, node):
 		if isinstance(node, Tree):
-			self.children.append(node)
+			self.subfolders.append(node)
 			return True
 		else:
 			return False
 
 
-	def add_archive(self, archive):	
-		self.archives.append(archive)
+	def add_file(self, archive):	
+		self.files.append(archive)
 
 
-	def insert_archive(self, nomepasta, archive):	# funcao para inserir um arquivo na hierarquia
+	def insert_file(self, nomepasta, dest, archive):	# funcao para inserir um arquivo na hierarquia
 		here = False
-		for pasta in self.children:			# procura em todos os filhos
-			if nomepasta == pasta.name:
-				pasta.archives.append(os.path.join(nomepasta,archive))	# se for um lugar certo, insere o arquivo
+		found = False
+		for pasta in self.subfolders:			# procura em todos os filhos
+			nome = pasta.name
+			if dest == nome:
+				pasta.files.append(os.path.join(dest,archive))	# se for um lugar certo, insere o arquivo
 				filecontent = open(os.path.join(nomepasta,archive), 'rb')
 				pasta.content_files.append(filecontent.read())
 				here = True
@@ -40,83 +42,97 @@ class Tree(object):
 		if here:
 			return True
 		else:
-			for pasta in self.children:
-				found = pasta.insert_archive(nomepasta, archive)	# se nao, chama recursivamente a funcao para todas as subpastas
+			if len(self.subfolders) > 0:
+				found = False				
+				for pasta in self.subfolders:
+					found = pasta.insert_file(nomepasta, dest, archive)	# se nao, chamo recursivamente para cada filho(subpasta) dos filhos
+					if found:
+						break
 				if found:
-					break
-			return True
+					return True
+				else:
+					return False
+			else: 
+				return False
 
-
-	def insert_directory(self, father, child):		# funcao para inserir subpasta na hierarquia
+	def insert_directory(self, father, subfolder):		# funcao para inserir subpasta na hierarquia
 		here = False
-		for pasta in self.children:			# procura em todos os filhos (subpastas)
-			if father == pasta.name:		# se for o lugar certo, insere a subpasta
-				aux = Tree(os.path.join(father, child))
-				pasta.children.append(aux)
+		for pasta in self.subfolders:			# procura em todos os filhos (subpastas)
+			nome = pasta.name
+			if father == nome:		# se for o lugar certo, insere a subpasta
+				aux = Tree(os.path.join(father, subfolder))
+				pasta.subfolders.append(aux)
 				here = True
 				break
 		if here:
 			return True
-		else:				
-			for pasta in self.children:
-				found = pasta.insert_directory(father, child)	# se nao, chamo recursivamente para cada filho(subpasta) dos filhos
+		else:
+			if len(self.subfolders) > 0:
+				found = False				
+				for pasta in self.subfolders:
+					found = pasta.insert_directory(father, subfolder)	# se nao, chamo recursivamente para cada filho(subpasta) dos filhos
+					if found:
+						break
 				if found:
-					break
-			return True
+					return True
+				else:
+					return False
+			else: 
+				return False
 
 	
 	def save_to_file(self, output_file):
 		output_file.write('{')					# simbolo que marca inicio de pasta
 		output_file.write(self.name.encode('utf8', 'ignore'))
 		output_file.write('$')					# simbolo que marca fim de nome de pasta
-		if len(self.archives) > 0: 
-			for file in self.archives:
+		if len(self.files) > 0: 
+			for file in self.files:
 				output_file.write('#')			# simbolo que marca inicio de arquivo
 				output_file.write(file.encode('utf8', 'ignore'))
-				current_index = self.archives.index(file)
+				current_index = self.files.index(file)
 				output_file.write('|')			# simbolo que marca inicio do offset
 				output_file.write(str(len(str(self.content_files[current_index]))))
 				output_file.write('*')			# simbolo que marca inicio dos dados do arquivo
 				output_file.write(self.content_files[current_index])
-		if self.children is not None:
-			for child in self.children:
-				child.save_to_file(output_file)		# chama recursivamente a funcao para cada subpasta
+		if self.subfolders is not None:
+			for subfolder in self.subfolders:
+				subfolder.save_to_file(output_file)		# chama recursivamente a funcao para cada subpasta
 		
 				
-		output_file.write('}')	#fecha pasta 		
-		
-
-
-
+		output_file.write('}')	#fecha pasta 	
 
 
 def create(path):  # funcao que cria o arquivo .sar
-    output = open(path+'.sar', 'wb')
-    directory = Tree(path)
+    out_path = path.split('\\')
+    output = open(out_path[-1]+'.sar', 'wb')
+    directory = Tree(out_path[-1])
+    print("Criando arquivo...")
     is_root = True
     # dirname: pasta atual, dirnames: subpastas, filenames: nomes de arquivo
     for dirname, dirnames, filenames in os.walk(unicode(path), topdown=True):
-                
+        split_dirname = dirname.split(out_path[-1])
+        static_dirname = out_path[-1]+split_dirname[-1]
+
         for subdirname in dirnames:
             if is_root:		#se ta na pasta raiz, cria primeiro filho
-                subdir = Tree(os.path.join(dirname, subdirname))
-                directory.add_child(subdir)
+                subdir = Tree(os.path.join(static_dirname, subdirname))
+                directory.add_subfolder(subdir)
             else:		#ou chama funcao para inserir no filho correto
-                directory.insert_directory(dirname, subdirname)
+                directory.insert_directory(static_dirname, subdirname)
                
         for filename in filenames:
             if is_root:  # se ta na pasta raiz, cria primeiro node
-                directory.add_archive(os.path.join(dirname,filename))
+                directory.add_file(os.path.join(static_dirname,filename))
                 filecontent = open(os.path.join(dirname,filename), 'rb')
                 directory.content_files.append(filecontent.read())
                 filecontent.close()
             
             else:  # ou chama funcao para inserir no filho correto
-                directory.insert_archive(dirname,filename)
+                directory.insert_file(dirname, static_dirname, filename)
            
         is_root = False
     directory.save_to_file(output)
-    print ("Created "+path+'.sar')
+    print ("Arquivo criado: "+out_path[-1]+'.sar')
     return 0
 
 
@@ -183,7 +199,7 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
     	elif (file_sar[current_offset]== '$'):				# fim do do nome da pasta
     		end = current_offset
     		if not os.path.isdir(file_sar[begin+1:end].decode('utf8','ignore')):
-    			os.mkdir(file_sar[begin+1:end].decode('utf8', 'ignore'))		# cria a pasta, se ela nao existir
+    			os.mkdir('.\\'+file_sar[begin+1:end].decode('utf8', 'ignore'))		# cria a pasta, se ela nao existir
     	
 
     	elif (file_sar[current_offset] == '#'):				# inicio do arquivo
@@ -191,7 +207,7 @@ def extract(archive):  # funcao que extrai os arquivos do arquivo .sar
 
     	elif (file_sar[current_offset] == '|'):				# inicio do offset do arquivo
     		end = current_offset
-    		arq_dest = open(file_sar[begin+1:end].decode('utf8','ignore'), 'wb')	# abro o arquivo em modo de escrita
+    		arq_dest = open('.\\'+file_sar[begin+1:end].decode('utf8','ignore'), 'wb')	# abro o arquivo em modo de escrita
     		j_begin = current_offset
 
     	elif (file_sar[current_offset] == '*'):				# inicio dos dados do arquivo
@@ -215,7 +231,7 @@ def sar_help():		#imprime instrucoes para usuario
 
 
 def main (argv):
-	if len(argv) <= 2: 
+	if len(argv) <= 2:
 		if len(argv) == 2 and argv[1].upper() == '-H':
 			sar_help()
 			return 3
@@ -240,7 +256,7 @@ def main (argv):
 		else:
 			print('Arquivo invalido.\nUse -h para ajuda')
 			return 2
-	else: 
+	else:
 		print('Entrada invalida.\nUse -h para ajuda')
 
 
