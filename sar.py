@@ -1,6 +1,13 @@
 import os
 import sys
+import platform
 
+flux = ''
+
+if platform.system() == 'Windows': 
+	flux = '\\'
+else: 
+	flux = '/'
 
 class Tree(object):
 	def __init__(self, name='root', files=None, subfolders=None):
@@ -103,7 +110,7 @@ class Tree(object):
 
 
 def create(path):  # funcao que cria o arquivo .sar
-    out_path = path.split('\\')
+    out_path = path.split(flux)
     output = open(out_path[-1]+'.sar', 'wb')
     directory = Tree(out_path[-1])
     print("Criando arquivo...")
@@ -154,7 +161,7 @@ def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
 
 		elif (file_sar[current_offset]== '$'):				# fim do do nome da pasta
 			end = current_offset
-			dir_name = file_sar[begin+1:end].split('\\')
+			dir_name = file_sar[begin+1:end].split(flux)
 			print ('\n'+('\t'*tab_counter)+'+ '+dir_name[-1].decode('utf8', 'ignore'))					# imprime nome da pasta
 			tab_counter += 1
 
@@ -163,7 +170,7 @@ def list_dir(archive):  # funcao que lista os diretorios do arquivo .sar
 
 		elif (file_sar[current_offset] == '|'):				# inicio do offset do arquivo
 			end = current_offset
-			file_name = file_sar[begin+1:end].split('\\')
+			file_name = file_sar[begin+1:end].split(flux)
 			print (('\t'*tab_counter)+'- '+file_name[-1].decode('utf8', 'ignore'))	# imprime nome do arquivo
 			j_begin = current_offset
 
