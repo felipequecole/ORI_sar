@@ -4,6 +4,8 @@ import platform
 
 flux = ''
 
+# teste
+
 if platform.system() == 'Windows': 
 	flux = '\\'
 else: 
